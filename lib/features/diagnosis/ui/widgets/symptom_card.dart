@@ -39,59 +39,73 @@ class _SymptomCardState extends State<SymptomCard> {
               child: Stack(
                 children: [
                   AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic,
+                    transform: Matrix4.translationValues(0, isHovered ? -8 : 0, 0), // Efek Melayang
                     decoration: BoxDecoration(
-                      color: widget.color.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(8),
+                      color: widget.isSelected 
+                          ? widget.color.withOpacity(0.1) 
+                          : widget.color.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(16), // Lebih bulat
                       border: widget.isSelected 
-                        ? Border.all(color: const Color(0xFFEA4C89), width: 3)
-                        : Border.all(color: Colors.transparent),
-                      boxShadow: isHovered && !widget.isSelected
+                        ? Border.all(color: const Color(0xFFEA4C89), width: 2)
+                        : Border.all(color: Colors.transparent, width: 2),
+                      boxShadow: isHovered
                           ? [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, 5),
+                                color: widget.color.withOpacity(0.3),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
                               )
                             ]
-                          : [],
+                          : [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.02),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              )
+                            ],
                     ),
                     child: Center(
                       child: AnimatedScale(
                         scale: isHovered ? 1.1 : 1.0,
-                        duration: const Duration(milliseconds: 200),
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOutBack,
                         child: Icon(
-                          widget.isSelected ? Icons.check_circle : Icons.computer,
+                          widget.isSelected ? Icons.check_circle_rounded : Icons.computer_rounded,
                           size: 64,
                           color: widget.isSelected ? const Color(0xFFEA4C89) : widget.color,
                         ),
                       ),
                     ),
                   ),
-                  // Hover Overlay (Simulated for selected)
-                  if (widget.isSelected)
-                    Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEA4C89).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
                   // Category Badge
                   Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        widget.symptom.category,
-                        style: GoogleFonts.inter(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF0D0C22),
+                    top: 16,
+                    right: 16,
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 200),
+                      opacity: isHovered || widget.isSelected ? 1.0 : 0.0, // Muncul saat hover/select
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.95),
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          widget.symptom.category,
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF0D0C22),
+                          ),
                         ),
                       ),
                     ),
@@ -99,7 +113,7 @@ class _SymptomCardState extends State<SymptomCard> {
                 ],
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             // Title & Meta
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -111,18 +125,30 @@ class _SymptomCardState extends State<SymptomCard> {
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.inter(
                       fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                      fontSize: 15,
                       color: isHovered ? const Color(0xFFEA4C89) : const Color(0xFF0D0C22),
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
             Row(
               children: [
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    image: const DecorationImage(
+                      image: NetworkImage('https://i.pravatar.cc/150?img=12'), // Dummy Avatar
+                    ),
+                    border: Border.all(color: Colors.white, width: 1),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Text(
-                  'Hardware Team',
+                  'Tech Support',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -146,10 +172,14 @@ class _SymptomCardState extends State<SymptomCard> {
                   ),
                 ),
                 const Spacer(),
-                Icon(
-                  widget.isSelected ? Icons.favorite : Icons.favorite_border,
-                  size: 14,
-                  color: widget.isSelected ? const Color(0xFFEA4C89) : const Color(0xFF9E9EA7),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: Icon(
+                    widget.isSelected ? Icons.favorite : Icons.favorite_border_rounded,
+                    key: ValueKey(widget.isSelected),
+                    size: 16,
+                    color: widget.isSelected ? const Color(0xFFEA4C89) : const Color(0xFF9E9EA7),
+                  ),
                 ),
                 const SizedBox(width: 4),
                 Text(
@@ -163,7 +193,7 @@ class _SymptomCardState extends State<SymptomCard> {
                 const SizedBox(width: 12),
                 const Icon(
                   Icons.visibility_outlined,
-                  size: 14,
+                  size: 16,
                   color: Color(0xFF9E9EA7),
                 ),
                 const SizedBox(width: 4),

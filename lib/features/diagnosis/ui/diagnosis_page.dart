@@ -163,182 +163,244 @@ class DiagnosisPage extends StatelessWidget {
             );
           }
         },
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1200),
-            child: Column(
-              children: [
-                // Hero / Filter Section
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
-                  child: Column(
-                    children: [
-                      FadeInDown(
-                        child: Text(
-                          'Diagnose your hardware issues instantly.',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF0D0C22),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      FadeInDown(
-                        delay: const Duration(milliseconds: 200),
-                        child: Text(
-                          'Select the symptoms below to find the best solution for your computer problems.',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            color: const Color(0xFF6E6D7A),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      
-                      // Search Bar
-                      FadeInDown(
-                        delay: const Duration(milliseconds: 300),
-                        child: Container(
-                          width: 600,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 20,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                            border: Border.all(color: const Color(0xFFF3F3F4)),
-                          ),
-                          child: TextField(
-                            onChanged: (value) => context.read<DiagnosisCubit>().setSearchQuery(value),
-                            style: GoogleFonts.inter(fontSize: 16, color: const Color(0xFF0D0C22)),
-                            decoration: InputDecoration(
-                              hintText: 'Search symptoms (e.g., "Mati", "Blue Screen")...',
-                              hintStyle: GoogleFonts.inter(color: const Color(0xFF9E9EA7)),
-                              prefixIcon: const Icon(Icons.search, color: Color(0xFF9E9EA7)),
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 32),
-                      // Filter Chips
-                      BlocBuilder<DiagnosisCubit, DiagnosisState>(
-                        builder: (context, state) {
-                          String currentFilter = 'All Symptoms';
-                          if (state is DiagnosisInitial) currentFilter = state.activeFilter;
-                          if (state is DiagnosisSuccess) currentFilter = state.activeFilter;
-
-                          return Wrap(
-                            spacing: 12,
-                            runSpacing: 12,
-                            alignment: WrapAlignment.center,
-                            children: [
-                              _buildFilterChip(context, 'All Symptoms', currentFilter),
-                              _buildFilterChip(context, 'Power', currentFilter),
-                              _buildFilterChip(context, 'Display', currentFilter),
-                              _buildFilterChip(context, 'Performance', currentFilter),
-                              _buildFilterChip(context, 'System', currentFilter),
-                            ],
-                          );
-                        },
-                      ),
+        child: Stack(
+          children: [
+            // Background Mesh Gradient (Hiasan)
+            Positioned(
+              top: -100,
+              right: -100,
+              child: Container(
+                width: 600,
+                height: 600,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      const Color(0xFFEA4C89).withOpacity(0.1),
+                      Colors.transparent,
                     ],
                   ),
                 ),
-                
-                // Grid Content
-                Expanded(
-                  child: BlocBuilder<DiagnosisCubit, DiagnosisState>(
-                    builder: (context, state) {
-                      Set<String> currentSelection = {};
-                      String currentFilter = 'All Symptoms';
-                      String searchQuery = '';
-                      
-                      if (state is DiagnosisInitial) {
-                        currentSelection = state.selectedSymptoms;
-                        currentFilter = state.activeFilter;
-                        searchQuery = state.searchQuery;
-                      } else if (state is DiagnosisSuccess) {
-                        currentSelection = state.selectedSymptoms;
-                        currentFilter = state.activeFilter;
-                        searchQuery = state.searchQuery;
-                      }
-
-                      // Filter & Search Logic
-                      final filteredSymptoms = allSymptomsData.where((s) {
-                        final matchesFilter = currentFilter == 'All Symptoms' || s.category == currentFilter;
-                        final matchesSearch = s.name.toLowerCase().contains(searchQuery.toLowerCase()) ||
-                                              s.code.toLowerCase().contains(searchQuery.toLowerCase());
-                        return matchesFilter && matchesSearch;
-                      }).toList();
-
-                      if (filteredSymptoms.isEmpty) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.search_off, size: 64, color: Colors.grey[300]),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No symptoms found matching your criteria.',
-                                style: GoogleFonts.inter(
-                                  fontSize: 16,
-                                  color: const Color(0xFF9E9EA7),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-
-                      // Responsive Grid Count
-                      int crossAxisCount = 4;
-                      double width = MediaQuery.of(context).size.width;
-                      if (width < 600) crossAxisCount = 1;
-                      else if (width < 900) crossAxisCount = 2;
-                      else if (width < 1200) crossAxisCount = 3;
-
-                      return GridView.builder(
-                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
-                          childAspectRatio: 0.8,
-                          crossAxisSpacing: 32,
-                          mainAxisSpacing: 32,
-                        ),
-                        itemCount: filteredSymptoms.length,
-                        itemBuilder: (context, index) {
-                          final symptom = filteredSymptoms[index];
-                          final isSelected = currentSelection.contains(symptom.code);
-                          final color = _getPlaceholderColor(index);
-
-                          return FadeInUp(
-                            duration: const Duration(milliseconds: 500),
-                            key: ValueKey(symptom.code), 
-                            child: SymptomCard(
-                              symptom: symptom,
-                              isSelected: isSelected,
-                              color: color,
-                              onTap: () => context.read<DiagnosisCubit>().toggleSymptom(symptom.code),
-                            ),
-                          );
-                        },
-                      );
-                    },
+              ),
+            ),
+            Positioned(
+              top: 100,
+              left: -100,
+              child: Container(
+                width: 400,
+                height: 400,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      Colors.blue.withOpacity(0.05),
+                      Colors.transparent,
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
+            
+            // Main Content
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1200),
+                child: Column(
+                  children: [
+                    // Hero / Filter Section
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
+                      child: Column(
+                        children: [
+                          FadeInDown(
+                            child: Text(
+                              'Diagnose your hardware issues instantly.',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                fontSize: 42, // Lebih besar
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF0D0C22),
+                                letterSpacing: -1,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          FadeInDown(
+                            delay: const Duration(milliseconds: 200),
+                            child: Text(
+                              'Select the symptoms below to find the best solution for your computer problems.',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                fontSize: 18,
+                                color: const Color(0xFF6E6D7A),
+                                height: 1.5,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 48),
+                          
+                          // Search Bar
+                          FadeInDown(
+                            delay: const Duration(milliseconds: 300),
+                            child: Container(
+                              width: 600,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.08),
+                                    blurRadius: 30,
+                                    offset: const Offset(0, 10),
+                                  ),
+                                ],
+                                border: Border.all(color: Colors.white),
+                              ),
+                              child: TextField(
+                                onChanged: (value) => context.read<DiagnosisCubit>().setSearchQuery(value),
+                                style: GoogleFonts.inter(fontSize: 16, color: const Color(0xFF0D0C22)),
+                                decoration: InputDecoration(
+                                  hintText: 'Search symptoms (e.g., "Mati", "Blue Screen")...',
+                                  hintStyle: GoogleFonts.inter(color: const Color(0xFF9E9EA7)),
+                                  prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF9E9EA7)),
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 40),
+                          // Filter Chips
+                          BlocBuilder<DiagnosisCubit, DiagnosisState>(
+                            builder: (context, state) {
+                              String currentFilter = 'All Symptoms';
+                              if (state is DiagnosisInitial) currentFilter = state.activeFilter;
+                              if (state is DiagnosisSuccess) currentFilter = state.activeFilter;
+
+                              return Wrap(
+                                spacing: 12,
+                                runSpacing: 12,
+                                alignment: WrapAlignment.center,
+                                children: [
+                                  _buildFilterChip(context, 'All Symptoms', currentFilter),
+                                  _buildFilterChip(context, 'Power', currentFilter),
+                                  _buildFilterChip(context, 'Display', currentFilter),
+                                  _buildFilterChip(context, 'Performance', currentFilter),
+                                  _buildFilterChip(context, 'System', currentFilter),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    // Grid Content
+                    Expanded(
+                      child: BlocBuilder<DiagnosisCubit, DiagnosisState>(
+                        builder: (context, state) {
+                          Set<String> currentSelection = {};
+                          String currentFilter = 'All Symptoms';
+                          String searchQuery = '';
+                          
+                          if (state is DiagnosisInitial) {
+                            currentSelection = state.selectedSymptoms;
+                            currentFilter = state.activeFilter;
+                            searchQuery = state.searchQuery;
+                          } else if (state is DiagnosisSuccess) {
+                            currentSelection = state.selectedSymptoms;
+                            currentFilter = state.activeFilter;
+                            searchQuery = state.searchQuery;
+                          }
+
+                          // Filter & Search Logic
+                          final filteredSymptoms = allSymptomsData.where((s) {
+                            final matchesFilter = currentFilter == 'All Symptoms' || s.category == currentFilter;
+                            final matchesSearch = s.name.toLowerCase().contains(searchQuery.toLowerCase()) ||
+                                                  s.code.toLowerCase().contains(searchQuery.toLowerCase());
+                            return matchesFilter && matchesSearch;
+                          }).toList();
+
+                          if (filteredSymptoms.isEmpty) {
+                            return Center(
+                              child: FadeInUp(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(24),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[100],
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(Icons.search_off_rounded, size: 48, color: Colors.grey[400]),
+                                    ),
+                                    const SizedBox(height: 24),
+                                    Text(
+                                      'No symptoms found',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: const Color(0xFF0D0C22),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Try adjusting your search or filter criteria.',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 14,
+                                        color: const Color(0xFF6E6D7A),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }
+
+                          // Responsive Grid Count
+                          int crossAxisCount = 4;
+                          double width = MediaQuery.of(context).size.width;
+                          if (width < 600) crossAxisCount = 1;
+                          else if (width < 900) crossAxisCount = 2;
+                          else if (width < 1200) crossAxisCount = 3;
+
+                          return GridView.builder(
+                            padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: crossAxisCount,
+                              childAspectRatio: 0.8,
+                              crossAxisSpacing: 32,
+                              mainAxisSpacing: 32,
+                            ),
+                            itemCount: filteredSymptoms.length,
+                            itemBuilder: (context, index) {
+                              final symptom = filteredSymptoms[index];
+                              final isSelected = currentSelection.contains(symptom.code);
+                              final color = _getPlaceholderColor(index);
+
+                              return FadeInUp(
+                                duration: const Duration(milliseconds: 500),
+                                delay: Duration(milliseconds: index * 50), // Staggered animation
+                                key: ValueKey(symptom.code), 
+                                child: SymptomCard(
+                                  symptom: symptom,
+                                  isSelected: isSelected,
+                                  color: color,
+                                  onTap: () => context.read<DiagnosisCubit>().toggleSymptom(symptom.code),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
